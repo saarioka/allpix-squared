@@ -3,6 +3,8 @@ build/
 bin/
 lib/
 obj/
+include/
+share/
 
 # root and data files do not belong into the repository
 *.root
