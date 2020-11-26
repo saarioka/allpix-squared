@@ -53,6 +53,11 @@ namespace allpix {
          */
         void check_overlaps();
 
+        /**
+         * @brief Construct material for sensor
+         */
+        G4Material* construct_material(SensorMaterial material);
+
         // List of all materials
         std::map<std::string, G4Material*> materials_;
 

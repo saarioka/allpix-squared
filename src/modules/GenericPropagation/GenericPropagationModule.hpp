@@ -24,6 +24,8 @@
 #include "objects/DepositedCharge.hpp"
 #include "objects/PropagatedCharge.hpp"
 
+#include "tools/mobility.h"
+
 namespace allpix {
     /**
      * @ingroup Modules
@@ -89,13 +91,8 @@ namespace allpix {
             target_spatial_precision_{}, output_plots_step_{};
         bool output_plots_{}, output_linegraphs_{}, output_animations_{}, output_plots_lines_at_implants_{};
 
-        // Precalculated values for electron and hole mobility
-        double electron_Vm_;
-        double electron_Ec_;
-        double electron_Beta_;
-        double hole_Vm_;
-        double hole_Ec_;
-        double hole_Beta_;
+        // carrier_mobility variables of type Mobility (class defined in tools/Mobility.h)
+        Mobility* carrier_mobility_;
 
         // Precalculated value for Boltzmann constant:
         double boltzmann_kT_;

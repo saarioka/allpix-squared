@@ -113,15 +113,6 @@ GenericPropagationModule::GenericPropagationModule(Configuration& config,
         enable_parallelization();
     }
 
-    // Parameterization variables from https://doi.org/10.1016/0038-1101(77)90054-5 (section 5.2)
-    electron_Vm_ = Units::get(1.53e9 * std::pow(temperature_, -0.87), "cm/s");
-    electron_Ec_ = Units::get(1.01 * std::pow(temperature_, 1.55), "V/cm");
-    electron_Beta_ = 2.57e-2 * std::pow(temperature_, 0.66);
-
-    hole_Vm_ = Units::get(1.62e8 * std::pow(temperature_, -0.52), "cm/s");
-    hole_Ec_ = Units::get(1.24 * std::pow(temperature_, 1.68), "V/cm");
-    hole_Beta_ = 0.46 * std::pow(temperature_, 0.17);
-
     boltzmann_kT_ = Units::get(8.6173e-5, "eV/K") * temperature_;
 
     // Parameter for charge transport in magnetic field (approximated from graphs:
@@ -484,6 +475,22 @@ void GenericPropagationModule::init() {
         LOG(WARNING) << "This detector does not have an electric field.";
     }
 
+    // retrieve mobility_model (and convert to lower case, if needed) default is jacoboni
+    auto mobility_model = config_.get<std::string>("model", "jacoboni");
+    std::transform(mobility_model.begin(), mobility_model.end(), mobility_model.begin(), ::tolower);
+
+    // retrieve sensor material (and convert to lower case, if needed) default is silicon
+    auto sensor_material = detector->getModel()->getSensorMaterial();
+
+    if(mobility_model == "jacoboni") {
+        carrier_mobility_ = new MobilityJacoboni(sensor_material, temperature_);
+    } else if(mobility_model == "quay") {
+        carrier_mobility_ = new MobilityQuay(sensor_material, temperature_);
+        LOG(DEBUG) << "Quay";
+    } else {
+        throw InvalidValueError(config_, "model", mobility_model);
+    }
+
     // For linear fields we can in addition check if the correct carriers are propagated
     if(detector->getElectricFieldType() == FieldType::LINEAR) {
         auto model = detector_->getModel();
@@ -659,21 +666,9 @@ GenericPropagationModule::propagate(const ROOT::Math::XYZPoint& pos, const Carri
     // Create a runge kutta solver using the electric field as step function
     Eigen::Vector3d position(pos.x(), pos.y(), pos.z());
 
-    // Define a lambda function to compute the carrier mobility
-    // NOTE This function is typically the most frequently executed part of the framework and therefore the bottleneck
-    auto carrier_mobility = [&](double efield_mag) {
-        // Compute carrier mobility from constants and electric field magnitude
-        if(type == CarrierType::ELECTRON) {
-            return electron_Vm_ / electron_Ec_ /
-                   std::pow(1. + std::pow(efield_mag / electron_Ec_, electron_Beta_), 1.0 / electron_Beta_);
-        } else {
-            return hole_Vm_ / hole_Ec_ / std::pow(1. + std::pow(efield_mag / hole_Ec_, hole_Beta_), 1.0 / hole_Beta_);
-        }
-    };
-
     // Define a function to compute the diffusion
     auto carrier_diffusion = [&](double efield_mag, double timestep) -> Eigen::Vector3d {
-        double diffusion_constant = boltzmann_kT_ * carrier_mobility(efield_mag);
+        double diffusion_constant = boltzmann_kT_ * carrier_mobility_->get(type, efield_mag);
         double diffusion_std_dev = std::sqrt(2. * diffusion_constant * timestep);
 
         // Compute the independent diffusion in three
@@ -691,7 +686,7 @@ GenericPropagationModule::propagate(const ROOT::Math::XYZPoint& pos, const Carri
         auto raw_field = detector_->getElectricField(static_cast<ROOT::Math::XYZPoint>(cur_pos));
         Eigen::Vector3d efield(raw_field.x(), raw_field.y(), raw_field.z());
 
-        return static_cast<int>(type) * carrier_mobility(efield.norm()) * efield;
+        return static_cast<int>(type) * carrier_mobility_->get(type, efield.norm()) * efield;
     };
 
     std::function<Eigen::Vector3d(double, const Eigen::Vector3d&)> carrier_velocity_withB =
@@ -702,7 +697,7 @@ GenericPropagationModule::propagate(const ROOT::Math::XYZPoint& pos, const Carri
         Eigen::Vector3d velocity;
         Eigen::Vector3d bfield(magnetic_field_.x(), magnetic_field_.y(), magnetic_field_.z());
 
-        auto mob = carrier_mobility(efield.norm());
+        auto mob = carrier_mobility_->get(type, efield.norm());
         auto exb = efield.cross(bfield);
 
         Eigen::Vector3d term1;

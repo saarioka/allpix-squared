@@ -33,6 +33,38 @@
 namespace allpix {
     /**
      * @ingroup DetectorModels
+     * @brief Enumeration class for sensor materials.
+     * The sensor material is accessed and retreived by calls to this class (as example SensorMaterial::SILICON).
+     */
+    enum class SensorMaterial {
+        NONE = 0,
+        SILICON,
+        GERMANIUM,
+        SIGE,
+        GAAS,
+    };
+
+    /**
+     * @ingroup DetectorModels
+     * @brief Flags to distinguish between sensor materials
+     */
+    inline std::ostream& operator<<(std::ostream& os, const SensorMaterial material) {
+        if(material == SensorMaterial::SILICON) {
+            os << "Silicon";
+        } else if(material == SensorMaterial::GERMANIUM) {
+            os << "Germanium";
+        } else if(material == SensorMaterial::SIGE) {
+            os << "SiGe(20:80)";
+        } else if(material == SensorMaterial::GAAS) {
+            os << "GaAs";
+        } else {
+            os << "Unknown";
+        }
+        return os;
+    }
+
+    /**
+     * @ingroup DetectorModels
      * @brief Base of all detector models
      *
      * Implements the minimum required for a detector model. A model always has a pixel grid with a specific pixel size. The
@@ -315,6 +347,31 @@ namespace allpix {
                                          getSensorSize().z() / 2.0 + getChipSize().z() / 2.0);
             return getCenter() + offset;
         }
+
+        /*
+         * @brief Returns the material of the sensor
+         * @return Sensor material
+         */
+        SensorMaterial getSensorMaterial() { return sensor_material_; }
+
+        /*
+         * @brief Sets the material of the sensor
+         * @param Sensor material
+         */
+        void setSensorMaterial(const std::string& val) {
+            if(val == "si") {
+                sensor_material_ = SensorMaterial::SILICON;
+            } else if(val == "ge") {
+                sensor_material_ = SensorMaterial::GERMANIUM;
+            } else if(val == "sige") {
+                sensor_material_ = SensorMaterial::SIGE;
+            } else if(val == "gaas") {
+                sensor_material_ = SensorMaterial::GAAS;
+            } else {
+                throw std::invalid_argument("invalid sensor material \"" + val + "\"");
+            }
+        }
+
         /**
          * @brief Set the thickness of the sensor
          * @param val Thickness of the sensor
@@ -363,6 +420,8 @@ namespace allpix {
 
     protected:
         std::string type_;
+
+        SensorMaterial sensor_material_;
 
         ROOT::Math::DisplacementVector2D<ROOT::Math::Cartesian2D<unsigned int>> number_of_pixels_;
         ROOT::Math::XYVector pixel_size_;

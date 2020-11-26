@@ -167,6 +167,7 @@ void GeometryConstructionG4::init_materials() {
     materials_["plexiglass"] = nistman->FindOrBuildMaterial("G4_PLEXIGLASS");
     materials_["silicon"] = nistman->FindOrBuildMaterial("G4_Si");
     materials_["tungsten"] = nistman->FindOrBuildMaterial("G4_W");
+    materials_["germanium"] = nistman->FindOrBuildMaterial("G4_Ge");
 
     // Create required elements:
     auto* H = new G4Element("Hydrogen", "H", 1., 1.01 * CLHEP::g / CLHEP::mole);
@@ -236,3 +237,25 @@ void GeometryConstructionG4::check_overlaps() {
         LOG(INFO) << "No overlapping volumes detected.";
     }
 }
+
+G4Material* GeometryConstructionG4::construct_material(SensorMaterial material) {
+	    G4NistManager* nistman = G4NistManager::Instance();
+
+	    if(material == SensorMaterial::GERMANIUM) {
+	        return nistman->FindOrBuildMaterial("G4_Ge");
+	    } else if(material == SensorMaterial::SIGE) {
+	        G4Element* silicon = nistman->FindOrBuildElement("Si", true);
+	        G4Element* germanium = nistman->FindOrBuildElement("Ge", true);
+	        G4Material* sige_absorber = new G4Material("Si0.2Ge0.8", 4.8 * CLHEP::g / CLHEP::cm3, 2);
+	        sige_absorber->AddElement(silicon, 0.2);
+	        sige_absorber->AddElement(germanium, 0.8);
+	        return sige_absorber;
+	    } else if(material == SensorMaterial::GAAS) {
+	        return nistman->FindOrBuildMaterial("G4_GALLIUM_ARSENIDE");
+	    } else if(material == SensorMaterial::SILICON) {
+	        return nistman->FindOrBuildMaterial("G4_Si");
+	    } else {
+	        LOG(DEBUG) << "Sensor material is \"" << material << "\"";
+	        throw std::invalid_argument("This material is not implemented");
+	    }
+	}
