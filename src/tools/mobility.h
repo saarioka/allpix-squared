@@ -235,6 +235,39 @@ namespace allpix {
             return numerator / denominator;
         };
     };
+
+    /*@brief Class that uses a constant value for mobility.
+     *This is a valid approximation only in low electric fields.
+     */
+    class MobilityConstant : public Mobility {
+
+    public:
+        MobilityConstant(SensorMaterial detector_material, double temperature) : Mobility() {
+            if(detector_material != SensorMaterial::CDTE) // this parametrisation is only available for CdTe
+            {
+                LOG(INFO) << "Sensor material is \"" << detector_material << "\"";
+                throw std::invalid_argument("This mobility parametrization is not valid for the given detector material");
+            }
+        };
+
+        /**
+         * @brief returns the value of mobility for a given electric/magnetic field.
+         */
+        double get(const CarrierType& type, double efield_mag) {
+            if(max_efield_CdTe_ < efield_mag){
+                throw std::runtime_error("Electric field magnitude too large: constant approximation not valid");
+            }
+            if(type == CarrierType::ELECTRON) {
+                return electron_mobility_CdTe_;
+            } else {
+                return hole_mobility_CdTe_;
+            }
+        };
+
+        double max_efield_CdTe_ = 12000; // https://arxiv.org/abs/physics/0511184v1
+        double electron_mobility_CdTe_ = 1050; // https://indico.cern.ch/event/738283/contributions/3183397/attachments/1760035/2855544/SMurphy_AP2_Workshop_Nov2018.pdf
+        double hole_mobility_CdTe_ = 100; // https://indico.cern.ch/event/738283/contributions/3183397/attachments/1760035/2855544/SMurphy_AP2_Workshop_Nov2018.pdf
+    };
 } // namespace allpix
 
 #endif

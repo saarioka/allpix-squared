@@ -168,6 +168,7 @@ void GeometryConstructionG4::init_materials() {
     materials_["silicon"] = nistman->FindOrBuildMaterial("G4_Si");
     materials_["tungsten"] = nistman->FindOrBuildMaterial("G4_W");
     materials_["germanium"] = nistman->FindOrBuildMaterial("G4_Ge");
+    materials_["CdTe"] = nistman->FindOrBuildMaterial("G4_CdTe");
 
     // Create required elements:
     auto* H = new G4Element("Hydrogen", "H", 1., 1.01 * CLHEP::g / CLHEP::mole);
@@ -254,6 +255,8 @@ G4Material* GeometryConstructionG4::construct_material(SensorMaterial material) 
 	        return nistman->FindOrBuildMaterial("G4_GALLIUM_ARSENIDE");
 	    } else if(material == SensorMaterial::SILICON) {
 	        return nistman->FindOrBuildMaterial("G4_Si");
+	    } else if(material == SensorMaterial::CDTE) {
+	        return nistman->FindOrBuildMaterial("G4_CdTe");
 	    } else {
 	        LOG(DEBUG) << "Sensor material is \"" << material << "\"";
 	        throw std::invalid_argument("This material is not implemented");

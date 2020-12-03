@@ -42,6 +42,7 @@ namespace allpix {
         GERMANIUM,
         SIGE,
         GAAS,
+        CDTE,
     };
 
     /**
@@ -57,6 +58,8 @@ namespace allpix {
             os << "SiGe(20:80)";
         } else if(material == SensorMaterial::GAAS) {
             os << "GaAs";
+        } else if(material == SensorMaterial::CDTE) {
+            os << "CdTe";
         } else {
             os << "Unknown";
         }
@@ -367,6 +370,8 @@ namespace allpix {
                 sensor_material_ = SensorMaterial::SIGE;
             } else if(val == "gaas") {
                 sensor_material_ = SensorMaterial::GAAS;
+            } else if(val == "cdte") {
+                sensor_material_ = SensorMaterial::CDTE;
             } else {
                 throw std::invalid_argument("invalid sensor material \"" + val + "\"");
             }

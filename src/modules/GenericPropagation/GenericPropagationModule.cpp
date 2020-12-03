@@ -486,10 +486,12 @@ void GenericPropagationModule::init() {
         carrier_mobility_ = new MobilityJacoboni(sensor_material, temperature_);
     } else if(mobility_model == "quay") {
         carrier_mobility_ = new MobilityQuay(sensor_material, temperature_);
-        LOG(DEBUG) << "Quay";
+    } else if(mobility_model == "constant") {
+        carrier_mobility_ = new MobilityConstant(sensor_material, temperature_);
     } else {
         throw InvalidValueError(config_, "model", mobility_model);
     }
+    LOG(INFO) << "Using " << mobility_model << " mobility model.";
 
     // For linear fields we can in addition check if the correct carriers are propagated
     if(detector->getElectricFieldType() == FieldType::LINEAR) {
