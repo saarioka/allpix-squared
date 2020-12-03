@@ -264,6 +264,7 @@ namespace allpix {
             }
         };
 
+    private:
         double max_efield_CdTe_ = 12000; // https://arxiv.org/abs/physics/0511184v1
         double electron_mobility_CdTe_ = 1050; // https://indico.cern.ch/event/738283/contributions/3183397/attachments/1760035/2855544/SMurphy_AP2_Workshop_Nov2018.pdf
         double hole_mobility_CdTe_ = 100; // https://indico.cern.ch/event/738283/contributions/3183397/attachments/1760035/2855544/SMurphy_AP2_Workshop_Nov2018.pdf
