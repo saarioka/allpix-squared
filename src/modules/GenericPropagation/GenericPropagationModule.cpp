@@ -491,7 +491,7 @@ void GenericPropagationModule::init() {
     } else {
         throw InvalidValueError(config_, "model", mobility_model);
     }
-    LOG(INFO) << "Using " << mobility_model << " mobility model.";
+    LOG(INFO) << "Using " << mobility_model << " mobility model";
 
     // For linear fields we can in addition check if the correct carriers are propagated
     if(detector->getElectricFieldType() == FieldType::LINEAR) {
